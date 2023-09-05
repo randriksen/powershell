@@ -78,3 +78,38 @@ function license-leafgroups {
         Set-MgGroupLicense -GroupId $sub.Id -BodyParameter $licenseParameters -ErrorAction SilentlyContinue
     }
 }
+
+function Make-DynamicFromNested {
+	param (
+        [string]$topGroupName,
+		[string]$dynamicGroupName,
+		[string]$mailNickname,
+		[string]$description
+	)
+
+	$topGroup = Get-MgGroup -Filter "displayName eq '$topGroupName'"
+	
+	$subgroups = Get-Subgroups ($topGroup.id)
+
+	$rulestring = "user.memberof -any (group.objectId -in ["
+	foreach ($sub in $subgroups) {
+		$rulestring += "'" + $sub.id + "',"
+	}
+	$rulestring = $rulestring.Substring(0, $rulestring.Length - 1)
+	$rulestring += "])"
+
+	$newGroup = @{ 
+		DisplayName = $dynamicGroupName
+		Description =  $description
+		mailNickname = $mailNickname
+		MailEnabled = $false
+		SecurityEnabled = $true
+		GroupTypes = @( 
+		"DynamicMembership" 
+		) 
+		MembershipRule = $rulestring
+		MembershipRuleProcessingState = "On" 
+		
+		} 
+	New-MgGroup -BodyParameter $newGroup
+}
