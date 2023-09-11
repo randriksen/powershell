@@ -33,7 +33,7 @@ function Split-History {
 }
 
 # Define a function called get-extendedhistory
-function get-extendedhistory {
+function Get-ExtendedHistory {
     # Call the Split-History function to split the history into coherent commands
     $hist = split-history
 
@@ -59,7 +59,7 @@ function get-extendedhistory {
 }
 
 # Define a function called invoke-extendedhistory
-function invoke-extendedhistory {
+function Invoke-ExtendedHistory {
     param([int]$i)
     # Call the Split-History function to split the history into coherent commands
     $hist = split-history
