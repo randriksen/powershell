@@ -4,17 +4,17 @@ $usersWithOnlySMS = @()
 $usersWithNoMFA = @()
 
 $count = 0
-foreach ($u in $users) {
+$users | foreach-object -parallel {
     $count++
     if ($count % 25 -eq 0) {
-        write-host "Processing user $count"
+        write-host "Processing user $count/$($users.count)"
     }
-    #write-host  $u.DisplayName
+    #write-host  $_.DisplayName
     
 
-    $authenticationMethods = Get-MgUserAuthenticationMethod -UserId $u.Id
+    $authenticationMethods = Get-MgUserAuthenticationMethod -UserId $_.Id
     if ($authenticationMethods.count -lt 1) {
-        $usersWithNoMFA += $u
+        $usersWithNoMFA += $_
         continue
     }
     $phoneEnabled = $false
@@ -41,9 +41,9 @@ foreach ($u in $users) {
     
     }
     if ($phoneEnabled -and !$authentcatorEnabled) {
-        $usersWithOnlySMS += $u
+        $usersWithOnlySMS += $_
     }
-}
+} -throttlelimit 5
 
 $usersWithOnlySMS | select UserPrincipalName, DisplayName, MobilePhone | export-csv -Path "c:\temp\usersWithOnlySMS.csv"
 $usersWithNoMFA | select UserPrincipalName, DisplayName, MobilePhone | export-csv -Path "c:\temp\usersWithNoMFA.csv" -NoTypeInformation
